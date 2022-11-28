@@ -9,7 +9,21 @@ const getKey = () => {
     });
 };
 
-
+const sendMessage = (content) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0].id;
+    
+        chrome.tabs.sendMessage(
+            activeTab,
+            { message: 'inject', content },
+            (response) => {
+                if (response.status === 'failed') {
+                    console.log('injection failed.');
+                }
+            }
+        );
+    });
+};
 
 const generate = async (prompt) => {
     // Get your API key from storage
@@ -37,6 +51,8 @@ const generate = async (prompt) => {
 }
 const generateCompletionAction = async (info) => {
     try {
+        sendMessage('generating...');
+
         const { selectionText } = info;
         const basePromptPrefix = `
             Write me a professional LinkdIn message about why I am a good fit as a:
@@ -52,8 +68,10 @@ const generateCompletionAction = async (info) => {
             Refined Message:
         `
         const secondPromptCompletion = await generate(secondPrompt);
+        sendMessage(secondPromptCompletion.text);
     } catch (err) {
         console.error(err);
+        sendMessage(error.toString());
     }
 
 };
